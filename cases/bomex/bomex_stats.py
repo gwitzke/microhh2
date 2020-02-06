@@ -12,26 +12,26 @@ def plotstats(name, line):
   z   = stats.variables["z"][:]
   zh  = stats.variables["zh"][:]
 
-  areat  = stats.variables["area"][:,:]
-  areaht = stats.variables["areah"][:,:]
+  areat  = stats.groups["default"].variables["area"][:,:]
+  areaht = stats.groups["default"].variables["areah"][:,:]
   
-  st  = stats.variables["thl"][:,:]
-  qtt = stats.variables["qt"][:,:]*1000.
-  bt  = stats.variables["b"][:,:]
-  ut  = stats.variables["u"][:,:]
-  vt  = stats.variables["v"][:,:]
-  qlt = stats.variables["ql"][:,:]*1000.
-  cft = stats.variables["qlfrac"][:,:]
+  st  = stats.groups["default"].variables["thl"][:,:]
+  qtt = stats.groups["default"].variables["qt"][:,:]*1000.
+  bt  = stats.groups["thermo"].variables["b"][:,:]
+  ut  = stats.groups["default"].variables["u"][:,:]
+  vt  = stats.groups["default"].variables["v"][:,:]
+  qlt = stats.groups["thermo"].variables["ql"][:,:]*1000.
+  cft = stats.groups["thermo"].variables["ql_frac"][:,:]
   
-  sfluxt = stats.variables["thlflux"][:,:]
-  bfluxt = stats.variables["bflux"][:,:]
-  ufluxt = stats.variables["uflux"][:,:]
-  vfluxt = stats.variables["vflux"][:,:]
+  sfluxt = stats.groups["default"].variables["thl_diff"][:,:]
+  bfluxt = stats.groups["thermo"].variables["b_diff"][:,:]
+  ufluxt = stats.groups["default"].variables["u_diff"][:,:]
+  vfluxt = stats.groups["default"].variables["v_diff"][:,:]
   Ufluxt = ufluxt + vfluxt
   
-  u2t  = stats.variables["u2"][:,:]
-  v2t  = stats.variables["v2"][:,:]
-  w2t  = stats.variables["w2"][:,:]
+  u2t  = stats.groups["default"].variables["u_2"][:,:]
+  v2t  = stats.groups["default"].variables["v_2"][:,:]
+  w2t  = stats.groups["default"].variables["w_2"][:,:]
   tket = 0.5*(u2t + v2t + 0.5*(w2t[:,0:-1]+w2t[:,1::]))
   
   end   = t.size
@@ -59,7 +59,7 @@ def plotstats(name, line):
   tke = numpy.sum(areat [start:end,:]*tket[start:end,:], 0) / numpy.sum(areat [start:end,:], 0)
   
   # enable LaTeX plotting
-  rc('font',**{'family':'serif','serif':['Palatino']})
+  #rc('font',**{'family':'serif','serif':['Palatino']})
   rc('text', usetex=True)
 
   f = 1
@@ -71,6 +71,7 @@ def plotstats(name, line):
   plot(area, z, line, label=name)
   xlabel(r'area coverage [-]')
   ylabel(r'z [m]')
+  title("Cloud Coverage")
   legend(loc=0, frameon=False)
 
   f += 1
@@ -82,6 +83,7 @@ def plotstats(name, line):
   plot(st[0,:], z, 'k:')
   xlabel(r'$\theta$ [K]')
   ylabel(r'z [m]')
+  title("Potential Temperature")
   legend(loc=0, frameon=False)
  
   f += 1
@@ -93,6 +95,7 @@ def plotstats(name, line):
   plot(qtt[0,:], z, 'k:')
   xlabel(r'q$_t$ [g~kg$^{-1}$]')
   ylabel(r'z [m]')
+  title("Total Water Mixing Ratio")
   legend(loc=0, frameon=False)
 
   f += 1
@@ -104,6 +107,7 @@ def plotstats(name, line):
   plot(bt[0,:], z, 'k:')
   xlabel(r'b [m~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Buoyancy")
   legend(loc=0, frameon=False)
 
   f += 1
@@ -115,6 +119,7 @@ def plotstats(name, line):
   plot(ut[0,:], z, 'k:')
   xlabel(r'u [m~s$^{-1}$]')
   ylabel(r'z [m]')
+  title("Zonal Winds")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -126,6 +131,7 @@ def plotstats(name, line):
   plot(vt[0,:], z, 'k:')
   xlabel(r'v [m~s$^{-1}$]')
   ylabel(r'z [m]')
+  title("Meridional Winds")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -136,6 +142,7 @@ def plotstats(name, line):
   plot(ql, z, line, label=name)
   xlabel(r'q$_l$ [g~kg$^{-1}$]')
   ylabel(r'z [m]')
+  title("Liquid Water Mixing Ratio")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -146,6 +153,7 @@ def plotstats(name, line):
   plot(cf, z, line, label=name)
   xlabel(r'cloud fraction [-]')
   ylabel(r'z [m]')
+  title("Cloud Fraction")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -156,6 +164,7 @@ def plotstats(name, line):
   plot(sflux, zh, line, label=name)
   xlabel(r'w`$\theta_l$` [K~m~s$^{-1}$]')
   ylabel(r'z [m]')
+  title("Sensible Heat Flux")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -166,6 +175,7 @@ def plotstats(name, line):
   plot(bflux, zh, line, label=name)
   xlabel(r'w`b` [m$^2$~s$^{-3}$]')
   ylabel(r'z [m]')
+  title("Buoyancy Flux")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -179,6 +189,7 @@ def plotstats(name, line):
   #plot(Uflux, zh)
   xlabel(r'u`w` [m$^2$~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Momentum Flux")
   legend(loc=0, frameon=False)
 
   f += 1
@@ -189,6 +200,7 @@ def plotstats(name, line):
   plot(u2, z, line, label=name)
   xlabel(r'u`$^2$ [m$^2$~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Moment 2 of Zonal Velocity")
   legend(loc=0, frameon=False)
  
   f += 1
@@ -199,6 +211,7 @@ def plotstats(name, line):
   plot(v2, z, line, label=name)
   xlabel(r'v`$^2$ [m$^2$~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Moment 2 of Meridional Velocity")
   legend(loc=0, frameon=False)
  
   f += 1
@@ -209,6 +222,7 @@ def plotstats(name, line):
   plot(w2, zh, line, label=name)
   xlabel(r'w`$^2$ [m$^2$~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Moment 2 of Vertical Velocity")
   legend(loc=0, frameon=False)
   
   f += 1
@@ -219,6 +233,7 @@ def plotstats(name, line):
   plot(tke, z, line, label=name)
   xlabel(r'TKE [m$^2$~s$^{-2}$]')
   ylabel(r'z [m]')
+  title("Turbulent Kinectic Energy")
   legend(loc=0, frameon=False)
 
 ioff()
