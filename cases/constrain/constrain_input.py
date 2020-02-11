@@ -1,10 +1,17 @@
+"""
+Garrett Witzke
+CONSTRAIN CAO case setup using initial conditions
+provided by Met Office
+"""
+
+
 import numpy as np
 import netCDF4 as nc
 
 float_type = "f8"
 
 # Get number of vertical levels and size from .ini file
-with open('arm.ini') as f:
+with open('constrain.ini') as f:
     for line in f:
         if line.split('=')[0] == 'ktot':
             kmax = int(line.split('=')[1])
@@ -53,7 +60,7 @@ for k in range(kmax):
 # normalize profiles to SI
 qt /= 1000.  # g to kg
 
-# set the time series
+# set the time series in hours
 time_surface = np.array([  0.,   4.,  6.5,  7.5,  10., 12.5, 14.5])
 
 H  = np.array([-30.,  90., 140., 140., 100., -10.,  -10])
@@ -95,7 +102,7 @@ sbotthl = H/(rho*cp)
 sbotqt  = LE/(rho*Lv)
 
 # Save all the input data to NetCDF
-nc_file = nc.Dataset("arm_input.nc", mode="w", datamodel="NETCDF4", clobber=False)
+nc_file = nc.Dataset("constrain_input".nc", mode="w", datamodel="NETCDF4", clobber=False)
 
 nc_file.createDimension("z", kmax)
 nc_z = nc_file.createVariable("z", float_type, ("z"))

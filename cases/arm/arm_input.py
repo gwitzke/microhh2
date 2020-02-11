@@ -129,7 +129,7 @@ nc_time_ls = nc_group_timedep.createVariable("time_ls", float_type, ("time_ls"))
 nc_thl_ls  = nc_group_timedep.createVariable("thl_ls" , float_type, ("time_ls", "z"))
 nc_qt_ls   = nc_group_timedep.createVariable("qt_ls"  , float_type, ("time_ls", "z"))
 nc_time_ls[:]   = time_ls[:]
-nc_thl_ls [:,:] = thlls  [:,:]
+nc_thl_ls [:,:] = thlls  [:,:] 
 nc_qt_ls  [:,:] = qtls   [:,:]
 
 nc_file.close()
