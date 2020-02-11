@@ -13,8 +13,7 @@ from matplotlib import pylab as plt
 
 #Importing initial conditions data from Met Office file
 stats = netCDF4.Dataset("constrain_setup_forcing.nc", "r")
-#array(time,z)
-#array(time)
+
 
 t = stats.variables["time"][:]                #time
 z = stats.variables["z"][:]                   #Altitude
@@ -41,47 +40,76 @@ o3 = stats.variables["o3"][:]                 #Ozone Mass Mixing Ratio
 LW = stats.variables["LWhr"][:,:]             #Long Wave Heating Rates
 SW = stats.variables["SWhr"][:,:]             #Short Wave Heating Rates
 Vgeo = -15-0.0024*z
-Ugeo = 0
+Ugeo = 0 *z
 
-#Plotting Initial Conditions
-plt.figure(1) 
-plt.plot(t/3600,sst)
+#Converting Units
+thr = t/3600            #Time in hours
+
+
+#Plotting Profiles of the Initial Conditions
+
+
+plt.figure(1,figsize = (12,6)) 
+plt.plot(thr,sst)
+plt.axis([0,15,276,284])
 plt.title("Sea Surface Temperature")
-plt.xlabel("Time (s)")
-plt.ylabel("Temperature (K)")
+plt.xlabel(r'$Time (s)$')
+plt.ylabel(r'$Temperature (K)$')
 plt.show()
 
 
-plt.figure(2)
-plt.plot(theta_l[0,0:35],z[0:35])           
-plt.title("Liquid Water Potential Temperature")
-plt.xlabel(r'$\theta_l (K)$')
-plt.ylabel("Height (m)")
+plt.figure(2, figsize = (12,6))
+plt.plot(thr,wsubs[:,10], '-',label="z = 513 m")
+plt.plot(thr,wsubs[:,15], ':', label="z = 1533 m")
+plt.plot(thr,wsubs[:,30], '--', label="z = 2513")
+plt.axis([0,15,-0.05,0])
+plt.title("Large Scale Subsidence")
+plt.xlabel(r'$Time$')
+plt.ylabel(r'$Subsidence (m/s)$')
+plt.legend(loc='lower left')
 plt.show()
 
 
 plt.figure(3)
-plt.plot(qt[0,:],z, label = r'$q_t$')
-plt.plot(ql[0,:],z, '--',label = r'$q_l$')
+plt.plot(theta_l[0,:],z[:])           
+plt.axis([270,285,0,3000])
+plt.title("Liquid Water Potential Temperature")
+plt.xlabel(r'$\theta_l (K)$')
+plt.ylabel(r'$Height (m)$')
+plt.show()
+
+
+plt.figure(4)
+plt.plot(qt[0,:]*1000,z, label = r'$q_t$')
+plt.plot(ql[0,:]*1000,z, '--',label = r'$q_l$')
+plt.axis([0,2.5,0,3000])
 plt.title("Mixing Ratios")
 plt.xlabel(r'$(g/kg)$')
 plt.ylabel(r'$Height (m)$')
 plt.legend(loc='upper right')
 plt.show()
 
-plt.figure(4)
-plt.plot(v[0:],z[:])
+
+plt.figure(5)
+plt.plot(v[0,:],z[:], label = r'$V$')
+plt.plot(Vgeo,z, '--', label = r'$V_{geo}$')
+plt.axis([-25,-10,0,3000])
 plt.title("Vertical Wind Speed")
-plt.show(
-    
-"""
-plt.figure(4)
-plt.plot(t/3600,wsubs[:,1], '-',label="z = 513 m")
-plt.plot(t/3600,wsubs[:,2], '.', label="z = 1533 m")
-plt.plot(t/3600,wsubs[:,3], '--', label="z = 2513")
-plt.title("Large Scale Subsidence")
-plt.xlabel(r'$Time$')
-plt.ylabel(r'$Subsidence (m/s)$')
-plt.legend(loc='lower left')
+plt.xlabel(r'$(m/s)$')
+plt.ylabel(r'$Height(m)$')
+plt.legend(loc="upper right")
 plt.show()
-"""
+
+
+plt.figure(6)
+plt.plot(u[0,:],z[:], label = r'$U$')
+plt.plot(Ugeo,z, '--', label = r'$U_{geo}$')
+plt.axis([-6,6,0,3000])
+plt.title("Horizontal Wind Speed")
+plt.xlabel(r'$(m/s)$')
+plt.ylabel(r'$height(m)$')
+plt.legend(loc='upper left')
+plt.show()
+
+
+
