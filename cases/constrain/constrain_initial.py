@@ -45,10 +45,6 @@ Ugeo = 0 *z
 #Converting Units
 thr = t/3600            #Time in hours
 
-
-#Plotting Profiles of the Initial Conditions
-
-
 plt.figure(1,figsize = (12,6)) 
 plt.plot(thr,sst)
 plt.axis([0,15,276,284])
@@ -59,9 +55,9 @@ plt.show()
 
 
 plt.figure(2, figsize = (12,6))
-plt.plot(thr,wsubs[:,10], '-',label="z = 513 m")
-plt.plot(thr,wsubs[:,15], ':', label="z = 1533 m")
-plt.plot(thr,wsubs[:,30], '--', label="z = 2513")
+plt.plot(thr,wsubs[:,12], '-',label="z = 513 m")            
+plt.plot(thr,wsubs[:,21], ':', label="z = 1533 m")          
+plt.plot(thr,wsubs[:,27], '--', label="z = 2513 m")         
 plt.axis([0,15,-0.05,0])
 plt.title("Large Scale Subsidence")
 plt.xlabel(r'$Time$')
