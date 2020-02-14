@@ -1,142 +1,103 @@
 """
 Garrett Witzke
 CONSTRAIN CAO case setup using initial conditions
-provided by Met Office
+provided by the Met Office
+
+outline
+No ice microphysics...yet...
 """
 
-
-import numpy as np
-import netCDF4 as nc
+import numpy as np 
+import netCDF4 as nc 
 
 float_type = "f8"
 
-# Get number of vertical levels and size from .ini file
+#Important Constants
+Rd = 287.0
+cp = 1005.0
+Lv = 2.5e6
+p0 = 1009
+f  = 1.3e-4
+
+
+# Get number of vertical levels and size form constrain.ini
 with open('constrain.ini') as f:
     for line in f:
         if line.split('=')[0] == 'ktot':
             kmax = int(line.split('=')[1])
-        if line.split('=')[0]=='zsize':
+        if line.split('=')[0] == 'zsize':
             zsize = float(line.split('=')[1])
 
-dz = zsize / kmax
+dz = zsize/kmax
 
-# set the height
-z   = np.linspace(0.5*dz, zsize-0.5*dz, kmax)
-thl = np.zeros(np.size(z))
-qt  = np.zeros(np.size(z))
-u   = np.zeros(np.size(z))
-ug  = np.zeros(np.size(z))
+#importing dimensions, time varying data, and initial conditions from met office
+stats = netCDF4("constrain_setup_forcing.nc", "r")
+t   = stats.variables["time"][:]        #Time values (s)
+z   = stats.variables["z"][:]           #Height values (m)
+sst = stats.variables["SST"][:]         #Time varying Sea Surface Temperature (K)
+#lat = stats.variables["lat"][:,:]      #Height-Time Varying Latitude (degrees North)
+#lon = stats.variables["lon"][:,:]      #Height -Time Varying Longitude (degrees East)
+T   = stats.variables["T"][0,:]         #Initial Temperature as height increase (K)
+thl = stats.variables["theta_l"][0,:]   #Initial Theta_l as height increases (K)
+qt  = stats.variables["qt"][0,:]        #Initial qt as height increases (kg/kg)
+ql  = stats.variables["qc"][0,:]        #Initial ql as height increases (kg/kg)
+qv  = stats.variables["qv"][0,:]        #Initial qv as height increases (kg/kg)
+u   = stats.variables["u"][0,:]         #Initial u-component of velocity as height increase (m/s)
+v   = stats.variables["v"][0,:]         #Initial v-component of velocity as height increases (m/s)
+vg = -15.0 - 0.0024*z                   #Initial Vgeo as height increases   (m/s)
+ug = 0*z                                #Initial Ugeo as height increases   (m/s)
 
-for k in range(kmax):
-    # temperature
-    if z[k] <= 50.:
-        thl[k] = 299.0  + (z[k]     )*(301.5 -299.0 )/(50.)
-        qt[k] = 15.20  + (z[k]     )*(15.17 -15.20 )/(50.)
-    elif z[k] <=  350.:
-        thl[k] = 301.5  + (z[k]-  50.)*(302.5 -301.5 )/(350.-50.)
-        qt[k] = 15.17  + (z[k]-  50.)*(14.98 -15.17 )/(350.-50.)
-    elif z[k] <=  650.:
-        thl[k] = 302.5  + (z[k]- 350.)*(303.53-302.5 )/(650.-350.)
-        qt[k] = 14.98  + (z[k]- 350.)*(14.80 -14.98 )/(650.-350.)
-    elif z[k] <=  700.:
-        thl[k] = 303.53 + (z[k]- 650.)*(303.7 -303.53)/(700.-650.)
-        qt[k] = 14.80  + (z[k]- 650.)*(14.70 -14.80 )/(700.-650.)
-    elif z[k] <= 1300.:
-        thl[k] = 303.7  + (z[k]- 700.)*(307.13-303.7 )/(1300.-700.)
-        qt[k] = 14.70  + (z[k]- 700.)*( 13.50-14.80 )/(1300.-700.)
-    elif z[k] <= 2500.:
-        thl[k] = 307.13 + (z[k]-1300.)*(314.0 -307.13)/(2500.-1300.)
-        qt[k] = 13.50  + (z[k]-1300.)*( 3.00 - 13.50)/(2500.-1300.)
-    elif z[k] <= 5500.:
-        thl[k] = 314.0  + (z[k]-2500.)*(343.2 -314.0 )/(5500.-2500.)
-        qt[k] =  3.00
+#Convert Units to SI
 
-    # u-wind component
-    u[:] = 10.
 
-    # ug-wind component
-    ug[k] = 10.
 
-# normalize profiles to SI
-qt /= 1000.  # g to kg
+time_l = t[0:30:2]                     #Look at time intervals of every hour
+time_ls = np.append(time_l, 52200)     #Add-in the last half hour to list
 
-# set the time series in hours
-time_surface = np.array([  0.,   4.,  6.5,  7.5,  10., 12.5, 14.5])
 
-H  = np.array([-30.,  90., 140., 140., 100., -10.,  -10])
-LE = np.array([  5., 250., 450., 500., 420., 180.,    0])
+#Save all the input data to netCDF file
+nc_file = nc.Dataset("constrain_input".nc",mode="w", datamodel="NETCDF4",clobber=False)
 
-advthl = np.array([ 0.   , 0.  ,  0.  , -0.08, -0.16, -0.16])
-radthl = np.array([-0.125, 0.  ,  0.  ,  0.  ,  0.   , -0.1])
-advqt  = np.array([ 0.08 , 0.02, -0.04, -0.10, -0.16, -0.30])
-
-time_ls = np.array([  0.,   3.,  6.,  9.,  12., 14.5])
-thlls  = np.zeros((time_ls.size, kmax))
-qtls   = np.zeros((time_ls.size, kmax))
-
-# large scale forcings
-for n in range(time_ls.size):
-    tendthl = advthl[n] + radthl[n]
-    tendqt  = advqt[n]
-    for k in range(kmax):
-        if z[k] <= 1000.:
-            thlls[n,k] = tendthl
-            qtls[n,k] = tendqt
-        else:
-            thlls[n,k] = tendthl - (z[k]-1000.)*(tendthl)/(5500.-1000.)
-            qtls[n,k] = tendqt - (z[k]-1000.)*(tendqt)/(5500.-1000.)
-
-time_ls *= 3600. # h to s
-thlls /= 3600. # h to s
-qtls  /= 3600. # h to s
-qtls  /= 1000. # g to kg
-
-# Calculate the surface fluxes in the correct units.
-Rd  = 287.
-cp  = 1005.
-Lv  = 2.5e6
-p0  = 97000.
-rho = p0/(Rd*thl[0]*(1. + 0.61*qt[0]))
-time_surface *= 3600. # h to s
-sbotthl = H/(rho*cp)
-sbotqt  = LE/(rho*Lv)
-
-# Save all the input data to NetCDF
-nc_file = nc.Dataset("constrain_input".nc", mode="w", datamodel="NETCDF4", clobber=False)
-
+#Creat a Dimension for the height
 nc_file.createDimension("z", kmax)
 nc_z = nc_file.createVariable("z", float_type, ("z"))
 nc_z[:] = z[:]
 
-# Create a group called "init" for the initial profiles.
+#Create a group called init for the initial profiles
 nc_group_init = nc_file.createGroup("init")
 
 nc_thl = nc_group_init.createVariable("thl", float_type, ("z"))
 nc_qt  = nc_group_init.createVariable("qt" , float_type, ("z"))
 nc_u   = nc_group_init.createVariable("u"  , float_type, ("z"))
 nc_ug  = nc_group_init.createVariable("ug" , float_type, ("z"))
+nc_v   = nc_group_init.createVariable("v"  , float_type, ("z"))
+nc_vg  = nc_group_init.createVariable("vg" , float_type, ("z"))
+
 nc_thl[:] = thl[:]
 nc_qt [:] = qt [:]
 nc_u  [:] = u  [:]
 nc_ug [:] = ug [:]
+nc_v  [:] = v  [:]
+nc_vg [:] = vg [:]
 
-# Create a group called "timedep" for the timedep.
+#Create a group call "timedep" for the time dependant variables
 nc_group_timedep = nc_file.createGroup("timedep")
-nc_group_timedep.createDimension("time_surface", time_surface.size)
-nc_group_timedep.createDimension("time_ls", time_ls.size)
 
-nc_time_surface = nc_group_timedep.createVariable("time_surface", float_type, ("time_surface"))
-nc_thl_sbot = nc_group_timedep.createVariable("thl_sbot", float_type, ("time_surface"))
-nc_qt_sbot  = nc_group_timedep.createVariable("qt_sbot" , float_type, ("time_surface"))
+nc_group_timedep.createDimension("time", t.size)
+nc_group_timedep.createDimension("time_ls", t.size)
+
+
+nc_time      = nc_group_timedep.createVariable("time", time.size)
+nc_thl_sbot  = nc_group_timedep.createVariable() #thl profile as affected by the SST
+nc_qt_sbot   = nc_group_timedep.createVariable() #qt profile as affected by the SST
+nc_sst       = nc_group_timedep.createVariable("sst" , float_type, ("time"))
+#nc_lat = nc_group_timedep.createVariable("lat" , float_type, ("time)"))
+#nc_lon = nc_group_timedep.createVariable("lon" , float_type, ("time"))
+
 nc_time_surface[:] = time_surface[:]
 nc_thl_sbot    [:] = sbotthl     [:]
 nc_qt_sbot     [:] = sbotqt      [:]
+nc_sst         [:] = sst         [:]
 
-nc_time_ls = nc_group_timedep.createVariable("time_ls", float_type, ("time_ls"))
-nc_thl_ls  = nc_group_timedep.createVariable("thl_ls" , float_type, ("time_ls", "z"))
-nc_qt_ls   = nc_group_timedep.createVariable("qt_ls"  , float_type, ("time_ls", "z"))
-nc_time_ls[:]   = time_ls[:]
-nc_thl_ls [:,:] = thlls  [:,:] 
-nc_qt_ls  [:,:] = qtls   [:,:]
 
 nc_file.close()
