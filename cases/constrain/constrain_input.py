@@ -18,9 +18,10 @@ cp = 1005.0
 Lv = 2.5e6
 p0 = 1009
 f  = 1.3e-4
+Nc = 50 #1/cm^3 Cloud Droplet concentration number
 
 
-# Get number of vertical levels and size form constrain.ini
+# Get number of vertical levels and size from constrain.ini
 with open('constrain.ini') as f:
     for line in f:
         if line.split('=')[0] == 'ktot':
@@ -49,10 +50,8 @@ ug = 0*z                                #Initial Ugeo as height increases   (m/s
 
 #Convert Units to SI
 
-
-
-time_l = t[0:30:2]                     #Look at time intervals of every hour
-time_ls = np.append(time_l, 52200)     #Add-in the last half hour to list
+time_l = t[0:30:2]                     #Look at time intervals of every hour, units are in seconds though
+time_ls = np.append(time_l, 52200)     #Add-in the last half hour to list, units in seconds
 
 
 #Save all the input data to netCDF file
