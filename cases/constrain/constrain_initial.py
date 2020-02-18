@@ -69,7 +69,7 @@ axs[1].set_ylabel("Subsidence")
 axs[1].axis([0,14.5,-0.05,0])
 axs[1].legend(loc='lower left')
 fig.tight_layout()
-plt.show()
+
 
 #Plotting Liquid Water Potential Temp
 
@@ -79,7 +79,7 @@ plt.axis([270,285,0,3000])
 plt.title("Liquid Water Potential Temperature")
 plt.xlabel(r'$\theta_l (K)$')
 plt.ylabel(r'$Height (m)$')
-plt.show()
+
 
 #Plotting Water Mixing Ratios
 plt.figure()
@@ -90,11 +90,11 @@ plt.title("Mixing Ratios")
 plt.xlabel(r'$(g/kg)$')
 plt.ylabel(r'$Height (m)$')
 plt.legend(loc='upper right')
-plt.show()
+
 
 #Plotting of Vertical and Horizontal Wind Speeds Initial conditions
 
-fig, axs = plt.subplots(1,2)
+fig, axs = plt.subplots(1,2, sharey=True)
 axs[0].plot(v[0,:],z[:],label = r'$V$')
 axs[0].plot(Vgeo,z[:], '--',label = r'$V_{geo}$')
 axs[0].set_xlabel("m/s")
@@ -105,12 +105,12 @@ axs[0].legend(loc='lower left')
 axs[1].plot(u[0,:],z[:], label = r'$U$')
 axs[1].plot(Ugeo,z[:], '--', label = r'$U_{geo}$')
 axs[1].set_xlabel("m/s")
-axs[1].set_ylabel("height (m)")
+#axs[1].set_ylabel("height (m)")
 axs[1].set_title("Horizontal Wind Speed")
 axs[1].axis([-6,6,0,3000])
 axs[1].legend(loc='lower left')
 fig.tight_layout()
-plt.show()
+
 
 # Plotting Temperature and Temperature Gradient in Celsius
 
@@ -122,15 +122,17 @@ a = find_nearest(gamma,2.01)                #Tropopause located at height where 
 
 fig, axs = plt.subplots(2,1)
 axs[0].plot(T[0,:],z[:])
-axs[0].set_ylabel('Height (m)')
+axs[0].set_ylabel('Height (km)')
 axs[0].set_xlabel(r'$T\/(^\circ C)$')
 axs[0].set_title("Temperature")
+axs[0].axhline(y=8.25081, color ='black')
 axs[1].plot(gamma, z[:])
-axs[1].set_ylabel('Height (m)')
+axs[1].set_ylabel('Height (km)')
 axs[1].set_xlabel(r'$\Gamma_T\/(^\circ C / km)$')
 axs[1].set_title("Temperature Gradient")
 #axs[1].axvline(a,color = 'black')
-#axs[1].axhline(y=8.25081, color = 'black')
+axs[1].axhline(y=8.25081, color = 'black')
 axs[1].axis([-3,3,0,15])
 fig.tight_layout()
 plt.show()
+
