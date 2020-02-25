@@ -11,13 +11,6 @@ import netCDF4
 import struct 
 from matplotlib import pylab as plt 
 
-#Defining any functions i may need to do calculations
-def find_nearest(array, value):                 #Finds value in array closest to user specified value
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return array[idx]
-
-
 #Importing initial conditions data from Met Office file
 stats = netCDF4.Dataset("constrain_setup_forcing.nc", "r")
 
@@ -50,6 +43,9 @@ Vgeo    = -15-0.0024*z
 Ugeo    = 0*z
 
 
+
+
+
 #Plotting Time-Varying Sea-Surface Temperature and Subsidence at various heights
 
 thr = t/3600            #Converting time into hours
@@ -74,8 +70,9 @@ fig.tight_layout()
 #Plotting Liquid Water Potential Temp
 
 plt.figure()
-plt.plot(theta_l[0,:],z[:])           
-plt.axis([270,285,0,3000])
+plt.plot(theta_l[0,:],z[:])
+plt.plot(theta)           
+plt.axis([270,300,0,5000])
 plt.title("Liquid Water Potential Temperature")
 plt.xlabel(r'$\theta_l (K)$')
 plt.ylabel(r'$Height (m)$')
@@ -85,7 +82,10 @@ plt.ylabel(r'$Height (m)$')
 plt.figure()
 plt.plot(qt[0,:]*1000,z, label = r'$q_t$')
 plt.plot(ql[0,:]*1000,z, '--',label = r'$q_l$')
-plt.axis([0,2.5,0,3000])
+plt.plot(qt_adj[0,:]*1000,z, ':', label = r'$q_{tadj}$')
+plt.plot(qv[0,:]*1000,z,'--', color = 'black', label = r'$q_v$')
+plt.plot(qv_adj[0,:]*1000,z, ':', color = 'blue', label = r'$q_{vadj}$')
+plt.axis([0,2.5,0,5000])
 plt.title("Mixing Ratios")
 plt.xlabel(r'$(g/kg)$')
 plt.ylabel(r'$Height (m)$')
@@ -118,7 +118,7 @@ T[0,:] -= 273.15 #Convert to celsius
 z[:] /= 1000     #Convert to kilometres
 
 gamma = (-1) * np.gradient(T[0,:])          #Initial Temperature Lapse Rate defined as -dT/dz
-a = find_nearest(gamma,2.01)                #Tropopause located at height where lapse rate = 2 and continues to decrease from then on in height
+#a = find_nearest(gamma,2.01)                #Tropopause located at height where lapse rate = 2 and continues to decrease from then on in height
 
 fig, axs = plt.subplots(2,1)
 axs[0].plot(T[0,:],z[:])
@@ -134,5 +134,26 @@ axs[1].set_title("Temperature Gradient")
 axs[1].axhline(y=8.25081, color = 'black')
 axs[1].axis([-3,3,0,15])
 fig.tight_layout()
-plt.show()
 
+#Plotting SHF and LHF
+plt.figure()
+plt.title("Sensible and Latent Heat Fluxes")
+plt.plot(t[:],SHF[:], label = 'Sensible Heat Flux')
+plt.plot(t[:],LHF[:], label = "Latent Heat Flux")
+plt.xlabel("Time(s)")
+plt.ylabel("Heat Flux (W/m^2)")
+plt.legend(loc="upper left")
+
+#plotting longwave and shortwave radiation initial conditions
+
+fig, axs = plt.subplots(1,2, sharey=True)
+axs[0].plot(z[:],LW[0,:])
+axs[0].set_ylabel("Heating Rate")
+axs[0].set_xlabel("Height (km)")
+axs[0].set_title("Longwave")
+axs[1].plot(z[:],SW[0,:])
+axs[1].set_xlabel("Height (km)")
+axs[1].set_title("Shortwave")
+fig.tight_layout()
+
+plt.show()
