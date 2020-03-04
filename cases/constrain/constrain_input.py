@@ -45,7 +45,7 @@ wls      = stats.variables["wsubs"][0,:38]     #Initial Large Scale Vertical Vel
 thl      = stats.variables["theta_l"][0,:38]   #Initial Theta_l as height increases (K)
 qt       = stats.variables["qt_adj"][0,:38]    #Initial qt as height increases (kg/kg)  
 ql       = stats.variables["qc"][0,:38]        #Initial ql as height increases (kg/kg)
-qv       = stats.variables["qv"][0,:38]        #Initial qv as height increases (kg/kg)
+qv       = stats.variables["qv_adj"][0,:38]    #Initial qv as height increases (kg/kg)
 u        = stats.variables["U"][0,:38]         #Initial u-component of velocity as height increase (m/s)
 v        = stats.variables["V"][0,:38]         #Initial v-component of velocity as height increases (m/s)
 v_geo    = -15.0 - 0.0024*z                    #Initial Vgeo as height increases   (m/s)
@@ -88,6 +88,8 @@ nc_group_init = nc_file.createGroup("init")
 
 nc_thl    = nc_group_init.createVariable("thl"   , float_type, ("z"))
 nc_qt     = nc_group_init.createVariable("qt"    , float_type, ("z"))
+nc_qv     = nc_group_init.createVariable("qv"    , float_type, ("z"))
+nc_ql     = nc_group_init.createVariable("ql"    , float_type, ("z"))
 nc_u      = nc_group_init.createVariable("u"     , float_type, ("z"))
 nc_ug     = nc_group_init.createVariable("u_geo" , float_type, ("z"))
 nc_v      = nc_group_init.createVariable("v"     , float_type, ("z"))
@@ -96,11 +98,14 @@ nc_wls    = nc_group_init.createVariable("w_ls"  , float_type, ("z"))
 
 nc_thl      [:] = thl   [:]
 nc_qt       [:] = qt    [:]
+nc_qv       [:] = qv    [:]
+nc_ql       [:] = ql    [:]
 nc_u        [:] = u     [:]
 nc_ug       [:] = u_geo [:]
 nc_v        [:] = v     [:]
 nc_vg       [:] = v_geo [:]
 nc_wls      [:] = wls   [:]
+
 
 #Forcing Conditions
 
