@@ -23,19 +23,19 @@ stats = netCDF4.Dataset("constrain_default_0000000.nc", 'r')
 #Only grabbing necessary data
 
 #Assigning basic variable names
-t   = stats.variables["time"][:]                            #Time
-z   = stats.variables["z"][:]                               #Height 
+t   = stats.variables["time"][:]                              #Time
+z   = stats.variables["z"][:]                                 #Height 
 zh  = stats.variables["zh"][:38]                              #Half Height
-zi  = stats.groups["thermo"].variables["zi"][:]             #Boundary layer depth
-rho = stats.groups["thermo"].variables["rho"][:,:]          #Density
-Tt  = stats.groups["thermo"].variables["T"][:,:]            #Absolute Temperature
+zi  = stats.groups["thermo"].variables["zi"][:]               #Boundary layer depth
+rho = stats.groups["thermo"].variables["rho"][:,:]            #Density
+Tt  = stats.groups["thermo"].variables["T"][:,:]              #Absolute Temperature
 
 #Assigning fractional area contained in mask
 areat  = stats.groups["default"].variables["area"][:,:]
 areaht = stats.groups["default"].variables["areah"][:,:]
 
 #Assigning Time Series Variable names
-LWPt  = stats.groups["thermo"].variables["ql_path"][:]*1000  #Liquid Water Path units of g/m^2
+LWPt  = stats.groups["thermo"].variables["ql_path"][:]*1000   #Liquid Water Path units of g/m^2
 thlflux = stats.groups["default"].variables["thl_w"][:,:]     #flux of theta_l
 qtflux = stats.groups["default"].variables["qt_w"][:,:]       #Turbulent flux of ql                      
     
@@ -43,6 +43,8 @@ qtflux = stats.groups["default"].variables["qt_w"][:,:]       #Turbulent flux of
 thl  = stats.groups["default"].variables["thl"][:,:]        #Theta_l
 qtt  = stats.groups["default"].variables["qt"][:,:]*1000    #qt units of g/kg
 qlt  = stats.groups["thermo"].variables["ql"][:,:]*1000     #ql units of g/kg
+qvt  = qtt - qlt
+
 
 #Assigning Wind Component variable names
 wt     = stats.groups["default"].variables["w"][:,:]        #Vertical Velocity (z-direction)
@@ -62,18 +64,20 @@ start = 0
 end = t.size
 
 #Cloud base and height
+
 bottomArr = np.zeros(t.size)                        #create empty array to save cloud base values into
 topArr    = np.zeros(t.size)                        #create empty array to save cloud top values into
-for tInd in range(t.size):                          # for each timestep
-    isCloud = (np.where(qlt[tInd,:] > 10e-5))[0]    #Search for ql values bases on threshold
+for tIdx in range(t.size):                          #for each timestep
+    isCloud = (np.where(qlt[tIdx,:] > 10e-5))[0]    #Search for ql values bases on threshold
     if len(isCloud) == 0:                           #There are no ql values at time t=0
-        bottomArr[tInd] = 0                         #so set first number in heightArray = 0
+        bottomArr[tIdx] = 0                         #so set first number in heightArray = 0
         continue                                    #continue to next interation of for loop
     cb = isCloud[0]                                 #Cloud base values
     ct = isCloud[-1]                                #Cloud top values
     #print(z[cb])
-    bottomArr[tInd] = z[cb]                         #
-    topArr[tInd]    = z[ct]                         # 
+    #print(z[ct])
+    bottomArr[tIdx] = z[cb]                         #
+    topArr[tIdx]    = z[ct]                         # 
 
 #Rain Water Path
 
@@ -81,27 +85,24 @@ for tInd in range(t.size):                          # for each timestep
 
 #Cloud Fraction
 
-"""#SHF
-w = wt
-w_avg = np.mean(w[])
-w_p = w - w_avg
-th = thl / (1-Lv*ql/cp*T)
-th_avg = np.mean(th[])  
-th_p = th - th_avg
+#SHF
 
-Cov_wth = w_p * th_p
-avg_Cov_wth = np.mean(Cov_wth)
-
-SHFt = rho[]*cp*avg_Cov_wth                                 #Calculating SHF from K-theory
-
-SHF = np.zeros(t.size)                                      #Empty array to store averaged height values into   
-for i in range(t.size):                                     #Loop that takes average SHF over height for each timestep
-    SHF[i] = np.mean(SHFt[i,:])
- """  
 #LHF
 
 #Entrainment velocity
+W_h = np.zeros(t.size)
+for Idx in range(t.size):
+    W_h[Idx] = np.mean(wt[Idx,:])
+print(W_h)
+print(wt)
+W_ent = np.gradient(zi) - W_h
 
+#Turbulent Kinetic Energy 
+
+TKE = np.zeros(t.size)
+
+for tIdx in range(t.size):
+    TKE[tIdx] = np.mean(tket[tIdx,:])
 
 
 #---------------------------------Plotting--------------------------------------------
@@ -111,7 +112,7 @@ plt.figure(f)
 plt.plot(t/3600,bottomArr, '--',label ='Cloud Base')
 plt.plot(t/3600,topArr, label = 'Cloud Top')
 plt.title('Cloud Height vs Time')
-plt.xlabel('Time (s)')
+plt.xlabel('Time (hrs)')
 plt.ylabel('Height (m)')
 plt.legend(loc='upper left')
 
@@ -120,17 +121,26 @@ f += 1
 plt.figure(f)
 plt.plot(t/3600, LWPt)
 plt.title('Liquid Water Path')
-plt.xlabel('Time (s)')
+plt.xlabel('Time (hrs)')
 plt.ylabel('LWP')
 plt.xlim(0,14.5)
-"""
+
+
 f += 1
 plt.figure(f)
-plt.plot(t, SHF)
-plt.title('Theta_l')
-plt.ylabel(r'$\theta_l$')
-plt.xlabel('Height (m)')
-"""
+plt.plot(t/3600, TKE)
+plt.title('Turbulent Kinetic Energy')
+plt.xlabel('Time (hrs)')
+plt.ylabel('TKE')
+
+f += 1
+plt.figure(f)
+plt.plot(t/3600, W_ent)
+plt.title('Entrainment Velocity')
+plt.xlabel('Time (hrs)')
+plt.ylabel('Entrainment Velocity')
+
+    
 
 
 plt.show()
