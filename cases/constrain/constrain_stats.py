@@ -47,6 +47,7 @@ qtflux = default.groups["default"].variables["qt_w"][:,:]       #Turbulent flux 
 thl  = default.groups["default"].variables["thl"][:,:]        #Theta_l
 qtt  = default.groups["default"].variables["qt"][:,:]*1000    #qt units of g/kg
 qlt  = default.groups["thermo"].variables["ql"][:,:]*1000     #ql units of g/kg
+qlt1 = stats_ql.groups["thermo"].variables["ql"][:,:]*1000 
 ql_cover = default.groups["thermo"].variables["ql_cover"][:]
 ql_cover1 = stats_ql.groups["thermo"].variables["ql_cover"][:]
 qvt  = qtt - qlt
@@ -153,6 +154,17 @@ plt.legend(loc='upper left')
 
 
 
+f += 1
+plt.figure(f)
+plt.plot(t/3600, qlt1)
+plt.xlabel('Time (hrs)')
+plt.ylabel('ql')
+
+
+
+
+
+
 
 #Cloud Cover
 f += 1
@@ -163,8 +175,6 @@ plt.title('Cloud Cover')
 plt.xlabel('Time (hrs)')
 plt.ylabel('Cloud Cover')
 plt.legend(loc='lower right')
-
-
 
 
 f += 1
