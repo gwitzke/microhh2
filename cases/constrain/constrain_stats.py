@@ -18,45 +18,51 @@ Nc = 50                   #1/cm^3 Cloud Droplet conc
 
 
 #----------------------------import results-----------------------------------------
-stats = netCDF4.Dataset("constrain_default_0000000.nc", 'r') 
+default = netCDF4.Dataset("constrain_default_0000000.nc", 'r') 
+stats_ql = netCDF4.Dataset("constrain_ql_0000000.nc", 'r')
 
 #Only grabbing necessary data
 
 #Assigning basic variable names
-t    = stats.variables["time"][:]                              #Time
-z    = stats.variables["z"][:]                                 #Height 
-zh   = stats.variables["zh"][:38]                              #Half Height
-zi   = stats.groups["thermo"].variables["zi"][:]               #Boundary layer depth
-rho  = stats.groups["thermo"].variables["rho"][:,:]            #Density
-rhoh = stats.groups["thermo"].variables["rhoh"][:,:]           #Half level Density
-Tt   = stats.groups["thermo"].variables["T"][:,:]              #Absolute Temperature
+t    = default.variables["time"][:]                              #Time
+z    = default.variables["z"][:]                                 #Height 
+zh   = default.variables["zh"][:38]                              #Half Height
+zi   = default.groups["thermo"].variables["zi"][:]               #Boundary layer depth
+zi1  = stats_ql.groups["thermo"].variables["zi"][:]  
+rho  = default.groups["thermo"].variables["rho"][:,:]            #Density
+rhoh = default.groups["thermo"].variables["rhoh"][:,:]           #Half level Density
+Tt   = default.groups["thermo"].variables["T"][:,:]              #Absolute Temperature
 
 #Assigning fractional area contained in mask
-areat  = stats.groups["default"].variables["area"][:,:]
-areaht = stats.groups["default"].variables["areah"][:,:]
+areat  = default.groups["default"].variables["area"][:,:]
+areaht = default.groups["default"].variables["areah"][:,:]
 
 #Assigning Time Series Variable names
-LWPt  = stats.groups["thermo"].variables["ql_path"][:]*1000   #Liquid Water Path units of g/m^2
-thlflux = stats.groups["default"].variables["thl_w"][:,:]     #turbulent flux of theta_l
-qtflux = stats.groups["default"].variables["qt_w"][:,:]       #Turbulent flux of qt                      
+LWPt  = default.groups["thermo"].variables["ql_path"][:]*1000   #Liquid Water Path units of g/m^2
+LWPt1 = stats_ql.groups["thermo"].variables["ql_path"][:]*1000
+thlflux = default.groups["default"].variables["thl_w"][:,:]     #turbulent flux of theta_l
+qtflux = default.groups["default"].variables["qt_w"][:,:]       #Turbulent flux of qt                      
     
 #Assigning Thermodynamic variable names
-thl  = stats.groups["default"].variables["thl"][:,:]        #Theta_l
-qtt  = stats.groups["default"].variables["qt"][:,:]*1000    #qt units of g/kg
-qlt  = stats.groups["thermo"].variables["ql"][:,:]*1000     #ql units of g/kg
+thl  = default.groups["default"].variables["thl"][:,:]        #Theta_l
+qtt  = default.groups["default"].variables["qt"][:,:]*1000    #qt units of g/kg
+qlt  = default.groups["thermo"].variables["ql"][:,:]*1000     #ql units of g/kg
+ql_cover = default.groups["thermo"].variables["ql_cover"][:]
+ql_cover1 = stats_ql.groups["thermo"].variables["ql_cover"][:]
 qvt  = qtt - qlt
-ql_frac = stats.groups["thermo"].variables["ql_frac"][:,:]
+ql_frac = default.groups["thermo"].variables["ql_frac"][:,:]
+ql_frac1 = stats_ql.groups["thermo"].variables["ql_frac"][:,:]
 
 
 #Assigning Wind Component variable names
-wt     = stats.groups["default"].variables["w"][:,:]        #Vertical Velocity (z-direction)
-ut     = stats.groups["default"].variables["u"][:,:]        #U direction velocity (x- component)
-u2t    = stats.groups["default"].variables["u_2"][:,:]      
-vt     = stats.groups["default"].variables["v"][:,:]        #V direction velocity (y -component)
-v2t    = stats.groups["default"].variables["v_2"][:,:]
-w2t    = stats.groups["default"].variables["w_2"][:,:]
-ufluxt = stats.groups["default"].variables["u_w"][:,:]      #Turblulent flux of u velocity
-vfluxt = stats.groups["default"].variables["v_w"][:,:]      #Turbulent flux of v velocity
+wt     = default.groups["default"].variables["w"][:,:]        #Vertical Velocity (z-direction)
+ut     = default.groups["default"].variables["u"][:,:]        #U direction velocity (x- component)
+u2t    = default.groups["default"].variables["u_2"][:,:]      
+vt     = default.groups["default"].variables["v"][:,:]        #V direction velocity (y -component)
+v2t    = default.groups["default"].variables["v_2"][:,:]
+w2t    = default.groups["default"].variables["w_2"][:,:]
+ufluxt = default.groups["default"].variables["u_w"][:,:]      #Turblulent flux of u velocity
+vfluxt = default.groups["default"].variables["v_w"][:,:]      #Turbulent flux of v velocity
 Ufluxt = ufluxt + vfluxt
 tket   = 0.5*(u2t + v2t + 0.5*(w2t[:,0:-1] + w2t[:,1::]))
     
@@ -85,7 +91,12 @@ for tIdx in range(t.size):                          #for each timestep
 
 #Precipitation flux at the surface
 
-#Cloud Fraction
+#Cloud Cover
+
+
+
+
+
 
 #SHF
 SHF = cp * rhoh * thlflux
@@ -120,21 +131,11 @@ for tIdx in range(t.size):
     TKE[tIdx] = np.mean(tket[tIdx,:])
 
 
-#Cloud Coverage and fraction
-
-ql_frac_avg = np.zeros(t.size)
-ql_avg = np.zeros(t.size)
-
-for tIdx in range(t.size):
-    ql_frac_avg[tIdx] = np.mean(ql_frac[tIdx,:])
-    ql_avg[tIdx] = np.mean(qlt[tIdx,:])
-
-
-
 
 #----------------------------------Plotting Cloud Base and Height---------------------------
 #                                           Figure 3
 #                                        De Roode et Al.
+# Modify to look at Mean Cloud Top, not max
 
 f = 1
 plt.figure(f)
@@ -150,41 +151,35 @@ plt.legend(loc='upper left')
 #                                       Figure 4
 #                                   De Roode et Al.
 
+
+
+
+#Cloud Cover
 f += 1
 plt.figure(f)
-plt.plot(t/3600, ql_frac_avg)
-plt.title('Cloud Fraction')
-
-
-f += 1
-plt.figure(f)
-plt.plot(t/3600, ql_avg)
-plt.title('Cloud Covere')
+plt.plot(t/3600, ql_cover, label = 'default.nc')
+plt.plot(t/3600,ql_cover1, label = 'ql.nc', ls = '--')
+plt.title('Cloud Cover')
+plt.xlabel('Time (hrs)')
+plt.ylabel('Cloud Cover')
+plt.legend(loc='lower right')
 
 
 
 
 f += 1
 plt.figure(f)
-plt.plot(t/3600, LWPt)
+plt.plot(t/3600, LWPt, label = 'default.nc')
+plt.plot(t/3600, LWPt1, label = 'ql.nc', ls = '--')
 plt.title('Liquid Water Path')
 plt.xlabel('Time (hrs)')
 plt.ylabel('LWP')
 plt.xlim(0,14.5)
+plt.legend(loc='lower right')
 
-f += 1
-plt.figure(f)
-plt.plot(t/3600, TKE)
-plt.title('Turbulent Kinetic Energy')
-plt.xlabel('Time (hrs)')
-plt.ylabel('TKE')
+#Rain Water Path---After warm micro added
 
-f += 1
-plt.figure(f)
-plt.plot(t/3600, W_ent)
-plt.title('Entrainment Velocity')
-plt.xlabel('Time (hrs)')
-plt.ylabel('Entrainment Velocity')
+"""
 
 f += 1
 plt.figure(f)
@@ -199,6 +194,33 @@ plt.plot(t/3600, LHF_avg)
 plt.title('Latent Heat Flux')
 plt.xlabel('Time (hrs)')
 plt.ylabel('LHF')
+
+#Precipitation flux at surface
+
+f += 1
+plt.figure(f)
+plt.plot(t/3600, TKE)
+plt.title('Turbulent Kinetic Energy')
+plt.xlabel('Time (hrs)')
+plt.ylabel('TKE')
+
+
+f += 1
+plt.figure(f)
+plt.plot(t/3600, W_ent)
+plt.title('Entrainment Velocity')
+plt.xlabel('Time (hrs)')
+plt.ylabel('Entrainment Velocity')
+"""
+
+f += 1
+plt.figure(f)
+plt.plot(t/3600, zi, label = 'default.nc')
+plt.plot(t/3600, zi1, label = 'ql.nc', ls = '--')
+plt.title('Boundary layer Depth')
+plt.xlabel('Time (hrs)')
+plt.ylabel('BL Depth (m)')
+plt.legend(loc='lower right')
 
 
 #----------------------Plotting Horizontal Mean profiles at t = 12hrs---------------
