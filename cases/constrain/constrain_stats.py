@@ -76,7 +76,7 @@ end = t.size
 
 bottomArr = np.zeros(t.size)                        #create empty array to save cloud base values into
 topArr    = np.zeros(t.size)                        #create empty array to save cloud top values into
-mean_top  = np.zeros(t.size)                        #create empty arry to save mean cloud top values into
+mean_topArr  = np.zeros(t.size)                     #create empty arry to save mean cloud top values into
 for tIdx in range(t.size):                          #for each timestep
     isCloud = (np.where(qlt[tIdx,:] > 10e-5))[0]    #Search for ql values bases on threshold
     if len(isCloud) == 0:                           #There are no ql values at time t=0
@@ -89,19 +89,15 @@ for tIdx in range(t.size):                          #for each timestep
     #print'cloud top height =',z[ct]
     #print'Time steps for heights where clouds are located',isCloud
     #print(mean_top)
-    bottomArr[tIdx] = z[cb]                         #
-    topArr[tIdx]    = z[ct]                         # 
-    mean_top[tIdx]  = z[mean_ct]                    #
+    bottomArr[tIdx] = z[cb]                         #Dumping values into the empty arrays
+    topArr[tIdx]    = z[ct]                         #Dumping values into the empty arrays
+    mean_topArr[tIdx]  = z[mean_ct]                 #Dumping values into the empty arrays
 
 #Rain Water Path
 
 #Precipitation flux at the surface
 
 #Cloud Cover
-
-
-
-
 
 
 #SHF
@@ -146,7 +142,7 @@ f = 1
 plt.figure(f)
 plt.plot(t/3600,bottomArr, '--',label ='Cloud Base')
 plt.plot(t/3600,topArr, label = 'Cloud Top')
-plt.plot(t/3600,mean_top, label = 'Mean Cloud Top')
+plt.plot(t/3600,mean_topArr, label = 'Mean Cloud Top')
 plt.title('Cloud Height vs Time')
 plt.xlabel('Time (hrs)')
 plt.ylabel('Height (m)')
