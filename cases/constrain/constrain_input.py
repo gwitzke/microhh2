@@ -40,11 +40,10 @@ sst      = stats.variables["SST"][:]           #Time varying Sea Surface Tempera
 SHF      = stats.variables["SHF"][:]           #Time Varying surface forcing, sensible heat flux
 LHF      = stats.variables["LHF"][:]           #Time Varying surface forcing, latent heat flux
 lat      = stats.variables["lat"][:,0]         #Time Varying Latitude (degrees North)
-long     = stats.variables["lon"][:,0]         #Time Varying Longitude (degrees East)
-wls      = stats.variables["wsubs"][0,:38]     #Initial Large Scale Vertical Velocity (m/s)
+lon      = stats.variables["lon"][:,0]         #Time Varying Longitude (degrees East)
+w_ls      = stats.variables["wsubs"][0,:38]     #Initial Large Scale Vertical Velocity (m/s)
 thl      = stats.variables["theta_l"][0,:38]   #Initial Theta_l as height increases (K)
 qt       = stats.variables["qt_adj"][0,:38]    #Initial qt as height increases (kg/kg)  
-ql       = stats.variables["qc"][0,:38]        #Initial ql as height increases (kg/kg)
 qv       = stats.variables["qv_adj"][0,:38]    #Initial qv as height increases (kg/kg)
 u        = stats.variables["U"][0,:38]         #Initial u-component of velocity as height increase (m/s)
 v        = stats.variables["V"][0,:38]         #Initial v-component of velocity as height increases (m/s)
@@ -66,7 +65,10 @@ time_ls = np.array([ 0.0, 3600.0, 7200.0, 10800.0, 14400.0,
   36000.0, 39600.0, 43200.0, 46800.0, 50400.0])                 #Large Scale Forcing time
 
 #Unit Conversions 
-qt /= 1000. # kg/kg to g/kg
+
+
+qr = np.zeros(z.size)
+nr = np.zeros(z.size)
 
 #Calculating the surface fluxes
 rho = p0/(Rd*thl[0]*(1. + 0.61*qt[0]))
@@ -80,8 +82,12 @@ nc_file = netCDF4.Dataset("constrain_input.nc",mode="w", datamodel="NETCDF4",clo
 
 #Create a Dimension for the height
 nc_file.createDimension("z", kmax)
+nc_file.createDimension("z_ls", kmax)
 nc_z   = nc_file.createVariable("z"  , float_type, ("z"))
+nc_zls = nc_file.createVariable("z_ls", float_type, ("z_ls"))
+
 nc_z   [:] = z[:]
+nc_zls [:] = z_ls[:]
 
 #Create a group called init for the initial profiles
 nc_group_init = nc_file.createGroup("init")
@@ -89,25 +95,25 @@ nc_group_init = nc_file.createGroup("init")
 nc_thl    = nc_group_init.createVariable("thl"   , float_type, ("z"))
 nc_qt     = nc_group_init.createVariable("qt"    , float_type, ("z"))
 nc_qv     = nc_group_init.createVariable("qv"    , float_type, ("z"))
-nc_ql     = nc_group_init.createVariable("ql"    , float_type, ("z"))
 nc_u      = nc_group_init.createVariable("u"     , float_type, ("z"))
 nc_ug     = nc_group_init.createVariable("u_geo" , float_type, ("z"))
 nc_v      = nc_group_init.createVariable("v"     , float_type, ("z"))
 nc_vg     = nc_group_init.createVariable("v_geo" , float_type, ("z"))
+nc_qr     = nc_group_init.createVariable("qr"    , float_type, ("z"))
+nc_nr     = nc_group_init.createVariable("nr"    , float_type, ("z"))
 nc_wls    = nc_group_init.createVariable("w_ls"  , float_type, ("z"))
 
 nc_thl      [:] = thl   [:]
 nc_qt       [:] = qt    [:]
 nc_qv       [:] = qv    [:]
-nc_ql       [:] = ql    [:]
 nc_u        [:] = u     [:]
 nc_ug       [:] = u_geo [:]
 nc_v        [:] = v     [:]
 nc_vg       [:] = v_geo [:]
-nc_wls      [:] = wls   [:]
+nc_qr       [:] = qr    [:]
+nc_nr       [:] = nr    [:]
+nc_wls      [:] = w_ls   [:]
 
-
-#Forcing Conditions
 
 #Create a Dimension for time and large scale time
 nc_file.createDimension("time", t.size)
@@ -126,16 +132,18 @@ nc_thl_sbot      = nc_group_timedep.createVariable("thl_sbot" , float_type, ("ti
 nc_qt_sbot       = nc_group_timedep.createVariable("qt_sbot"  , float_type, ("time"))
 nc_lat           = nc_group_timedep.createVariable("lat"      , float_type, ("time"))
 nc_long          = nc_group_timedep.createVariable("long"     , float_type, ("time"))
+#nc_w_ls           = nc_group_timedep.createVariable("w_ls"     , float_type, ("time_ls","z"))
 
 nc_sst       [:] = sst     [:]
 nc_thl_sbot  [:] = sbotthl [:]
 nc_qt_sbot   [:] = sbotqt  [:]
 nc_lat       [:] = lat     [:]
-nc_long      [:] = long    [:]
+nc_long      [:] = lon     [:]
+#nc_w_ls       [:15,:] = w_ls    [:15,:]
 
 """
 #Large Scale time dependent variables 
-nc_w_ls     = nc_group_timedep.createVariable("w_ls"   , float_type, ("time_ls", "z"))
+nc_w_ls     = nc_group_timedep.createVariable("w_ls"   , float_type, ("time_ls", "z_ls"))
 
 nc_w_ls    [:,:] = wls     [:15,:]
 """
