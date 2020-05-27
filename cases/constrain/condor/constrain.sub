@@ -1,0 +1,9 @@
+executable = constrain.sh
+request_GPUs = 1
+request_CPUs = 8
+log = constrain.log
+output = constrain.stdout
+error = constrain.stderr
+getenv=True
+
+queue
